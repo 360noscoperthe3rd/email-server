@@ -34,6 +34,11 @@ app.post("/send-email", async (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 
+app.get("/", (req, res) => {
+  res.send("Email server running");
+});
+
+
 app.listen(PORT, () => {
   console.log(`Email server running on port ${PORT}`);
 });
