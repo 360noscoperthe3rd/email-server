@@ -8,10 +8,37 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/send-email", async (req, res) => {
-  console.log("📩 /send-email HIT");
+  console.log("HIT /send-email");
   console.log("BODY:", req.body);
 
-  res.json({ reached: true });
+  try {
+    const { to, subject, message } = req.body;
+
+    const transporter = nodemailer.createTransport({
+      service: "yahoo",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: `"Service Call" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html: message,
+    });
+
+    console.log("EMAIL SENT:", info.response);
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("EMAIL ERROR:", err);   // 🔥 THIS IS KEY
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
   /*try {
     const { to, subject, message } = req.body;
 
