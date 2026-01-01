@@ -11,17 +11,18 @@ app.use(express.json());
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
-  secure: false, // MUST be false for 587
+  secure: false, // MUST be false for 587 / 2525
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
   connectionTimeout: 10000,
+  greetingTimeout: 10000,   // ✅ ADDED
   socketTimeout: 10000,
 });
 
-// 🔍 VERIFY SMTP ON STARTUP (IMPORTANT)
-transporter.verify((err, success) => {
+// 🔍 VERIFY SMTP ON STARTUP
+transporter.verify((err) => {
   if (err) {
     console.error("SMTP VERIFY FAILED:", err);
   } else {
@@ -40,18 +41,27 @@ app.post("/send-email", async (req, res) => {
   }
 
   try {
-    await transporter.sendMail({
-      from: `"Service Call" <${process.env.SMTP_USER}>`,
-      to,
-      subject,
-      html: message,
-    });
+    console.log("SENDING EMAIL...");
+
+    // ✅ HARD TIMEOUT WRAPPER (IMPORTANT)
+    await Promise.race([
+      transporter.sendMail({
+        from: `"Service Call" <${process.env.SMTP_USER}>`,
+        to,
+        subject,
+        html: message,
+      }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Email send timeout")), 15000)
+      ),
+    ]);
 
     console.log("EMAIL SENT");
-    res.json({ success: true });
+    return res.json({ success: true });
+
   } catch (err) {
-    console.error("EMAIL ERROR:", err);
-    res.status(500).json({ error: "Email failed" });
+    console.error("EMAIL ERROR:", err.message);
+    return res.status(500).json({ error: err.message });
   }
 });
 
