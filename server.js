@@ -4,53 +4,62 @@ const cors = require("cors");
 const nodemailer = require("nodemailer");
 
 const app = express();
-
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Health check
-app.get("/", (req, res) => {
-  res.send("Email server running");
+// 🔥 CREATE TRANSPORTER ONCE
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: false, // MUST be false for 587
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
 });
 
-// Email sending endpoint
+// 🔍 VERIFY SMTP ON STARTUP (IMPORTANT)
+transporter.verify((err, success) => {
+  if (err) {
+    console.error("SMTP VERIFY FAILED:", err);
+  } else {
+    console.log("SMTP READY");
+  }
+});
+
 app.post("/send-email", async (req, res) => {
+  console.log("HIT /send-email");
+  console.log("BODY:", req.body);
+
+  const { to, subject, message } = req.body;
+
+  if (!to || !subject || !message) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
   try {
-    const { to, subject, message } = req.body;
-
-    if (!to || !subject || !message) {
-      return res.status(400).json({ success: false, error: "Missing required fields" });
-    }
-
-    // Create transporter for Brevo SMTP
-    const transporter = nodemailer.createTransport({
-      host: "smtp-relay.brevo.com",
-      port: 587,
-      secure: false, // use TLS false for port 587
-      auth: {
-        user: process.env.EMAIL_USER, // Brevo SMTP Login
-        pass: process.env.EMAIL_PASS, // Brevo SMTP Key
-      },
-    });
-
-    // Send mail
     await transporter.sendMail({
-      from: `"Service Call" <${process.env.EMAIL_USER}>`,
+      from: `"Service Call" <${process.env.SMTP_USER}>`,
       to,
       subject,
       html: message,
     });
 
-    console.log(`EMAIL SENT: ${to}`);
+    console.log("EMAIL SENT");
     res.json({ success: true });
   } catch (err) {
-    console.error("EMAIL ERROR:", err.message);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("EMAIL ERROR:", err);
+    res.status(500).json({ error: "Email failed" });
   }
 });
 
-// Start server
+app.get("/", (req, res) => {
+  res.send("Email server running");
+});
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Email server running on port ${PORT}`);
