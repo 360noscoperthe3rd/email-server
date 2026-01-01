@@ -8,7 +8,11 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/send-email", async (req, res) => {
-  try {
+  console.log("📩 /send-email HIT");
+  console.log("BODY:", req.body);
+
+  res.json({ reached: true });
+  /*try {
     const { to, subject, message } = req.body;
 
     const transporter = nodemailer.createTransport({
@@ -29,7 +33,7 @@ app.post("/send-email", async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
-  }
+  }*/
 });
 
 const PORT = process.env.PORT || 4000;
