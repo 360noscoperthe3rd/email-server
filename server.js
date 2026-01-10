@@ -53,7 +53,7 @@ app.post("/send-email", async (req, res) => {
     // ✅ HARD TIMEOUT WRAPPER (IMPORTANT)
     await Promise.race([
       transporter.sendMail({
-        from: `"Service Call" <support@tallyglobal.in>`,
+        from: `"Tally - Global Support" <support@tallyglobal.in>`,
         to,
         subject,
         html: message,
