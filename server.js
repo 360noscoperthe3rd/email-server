@@ -37,6 +37,8 @@ transporter.verify((err) => {
   }
 });
 
+const DEFAULT_CC = "srikumar@tallyglobal.in"; // 👈 your copy email
+
 app.post("/send-email", async (req, res) => {
   console.log("HIT /send-email");
   console.log("BODY:", req.body);
@@ -55,6 +57,7 @@ app.post("/send-email", async (req, res) => {
       transporter.sendMail({
         from: `"Tally - Global Support" <support@tallyglobal.in>`,
         to,
+        cc: DEFAULT_CC,
         subject,
         html: message,
       }),
