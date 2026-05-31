@@ -37,7 +37,7 @@ transporter.verify((err) => {
   }
 });
 
-const DEFAULT_CC = "srikumar@tallyglobal.in"; // 👈 your copy email
+const DEFAULT_CC = "tallyglobal.servicecontrol@gmail.com"; // 👈 your copy email
 
 app.post("/send-email", async (req, res) => {
   console.log("HIT /send-email");
